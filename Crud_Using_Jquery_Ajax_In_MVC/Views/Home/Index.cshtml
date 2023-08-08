@@ -1,0 +1,279 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>   
+</head>
+<body>
+    <div class="container">
+        <h3>Show Employee Records</h3>
+        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#myModal" onclick="clearTextBox();">Add new Employee</button><br /><br />
+        <table class="table table-bordered table-hover">
+            <thead style="text-align: center; font-weight: 700; mix-blend-mode: exclusion;">
+                <tr>
+                    <td>Employee Id</td>
+                    <td>EmpName</td>
+                    <td>Age</td>
+                    <td>State</td>
+                    <td>Country</td>
+                    <td>Action</td>
+                </tr>
+            </thead>
+            <tbody class="tbody">
+            </tbody>
+        </table>
+    </div>
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">X</button>
+                    <h4 class="modal-title" id="myModalLabel">Add Employee</h4>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="EmpId">Employee Id</label>
+                            <input type="text" class="form-control" id="EmpId" placeholder="Employee Id" disabled="disabled" />
+                        </div>
+                        <div class="form-group">
+                            <label for="EmpName">Emp Name</label>
+                            <input type="text" class="form-control" id="EmpName" placeholder="EmpName" />
+                        </div>
+                        <div class="form-group">
+                            <label for="Age">Age</label>
+                            <input type="text" class="form-control" id="Age" placeholder="Age" />
+                        </div>
+                        <div>
+                            <label for="State">State</label>
+                            <input type="text" class="form-control" id="State" placeholder="State" />
+                        </div>
+                        <div>
+                            <label for="Country">Country</label>
+                            <input type="text" class="form-control" id="Country" placeholder="Country" />
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="btnAdd" onclick="Add();">Add</button>
+                    <button type="button" class="btn btn-success" id="btnUpdate" onclick="Update();">Update</button>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            loadData();
+        });
+
+        function clearTextBox() {
+            $('#EmpId').val("");
+            $('#EmpName').val("");
+            $('#Age').val("");
+            $('#State').val("");
+            $('#Country').val("");
+            $('#btnAdd').show();
+            $('#btnUpdate').hide();
+            $('#EmpName').css('border-color', 'lightgrey');
+            $('#Age').css('border-color', 'lightgrey');
+            $('#State').css('border-color', 'lightgrey');
+            $('#Country').css('border-color', 'lightgrey');
+        };
+
+        function loadData() {
+            $.ajax({
+                type: "GET",
+                url: "/Home/ListAllEmployee",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (rest) {
+                    var html = '';
+                    $.each(rest, function (key, item) {
+                        html += '<tr>';
+                        html += '<td>' + item.EmpId + '</td>';
+                        html += '<td>' + item.EmpName + '</td>';
+                        html += '<td>' + item.Age + '</td>';
+                        html += '<td>' + item.State + '</td>';
+                        html += '<td>' + item.Country + '</td>';
+                        html += '<td><a href="#" onclick="return getbyID(' + item.EmpId + ')">Edit</a> | <a href="#" onclick="Delete(' + item.EmpId + ')">Delete</a></td>';
+                        html += '</tr>';
+                    });
+                    $('.tbody').html(html);
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+
+        function Add() {
+            var res = validate();
+            if (res == false) {
+                return false;
+            }
+            var objEmp = {
+                EmpId: $('#EmpId').val(),
+                EmpName: $('#EmpName').val(),
+                Age: $('#Age').val(),
+                State: $('#State').val(),
+                Country: $('#Country').val()
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Home/Add",
+                data: JSON.stringify(objEmp),
+                contentType: "application/json;charset=utf-8",
+                dataType: "json",
+                success: function (result) {                    
+                    $('#myModal').modal('hide');
+                    loadData();
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+
+        function getbyID(empId) {
+            $('#EmpName').css('border-color', 'lightgrey');
+            $('#Age').css('border-color', 'lightgrey');
+            $('#State').css('border-color', 'lightgrey');
+            $('#Country').css('border-color', 'lightgrey');
+
+            var objemp = {
+                EmpId: empId
+            };
+            $.ajax({              
+                type: "POST",
+                url: "/Home/GetByID",
+                data:JSON.stringify(objemp),
+                contentType: "application/json;charset=utf-8",
+                dataType: "json",
+                success: function (result) {
+                    $('#EmpId').val(result.EmpId);
+                    $('#EmpName').val(result.EmpName);
+                    $('#Age').val(result.Age);
+                    $('#State').val(result.State);
+                    $('#Country').val(result.Country);
+
+                    $('#myModal').modal('show');
+                    $('#btnUpdate').show();
+                    $('#btnAdd').hide();
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+            return false;
+        }               
+
+        function Update()
+        {
+            var res = validate();
+            if (res == false)
+            {
+                return false;
+            }
+            var objEmp = {
+                EmpId: $('#EmpId').val(),
+                EmpName: $('#EmpName').val(),
+                Age: $('#Age').val(),
+                State: $('#State').val(),
+                Country:$('#Country').val()
+            };
+            $.ajax({
+                type: "POST",
+                url: "/Home/Update",
+                data: JSON.stringify(objEmp),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                Success: function (result) { 
+                    loadData();
+                    $('#myModal').modal('hide');                    
+                    $('#EmpId').val("");
+                    $('#EmpName').val("");
+                    $('#Age').val("");
+                    $('#State').val("");
+                    $('#Country').val("");                   
+                },
+                error: function (errormessage) {
+                    alert(errormessage.responseText);
+                }
+            });
+        }
+
+        function Delete(Id) {
+            var mess = confirm("Are You Sure You Want to Delete this Record?");
+            if (mess) {
+                var objemp = { EmpId: Id };
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/Delete",
+                    data:JSON.stringify(objemp),
+                    contentType: "application/json;charset=UTF-8",
+                    dataType: "json",
+                    Success: function (result) {
+                        loadData();
+                        $('#myModal').modal('hide');
+                    },
+                    error: function (errormessage) {
+                        alert(errormessage.responseText);
+                    }
+                });
+            }
+        }
+       
+        function validate() {
+            var isValid = true;
+            if ($('#EmpName').val().trim() == "")
+            {
+                $('#EmpName').css('border-color', 'Red');
+                isValid = false;
+            }
+            else
+            {
+                $('#EmpName').css('border-color', 'lightgrey');
+            }
+
+            if ($('#Age').val().trim() == "")
+            {
+                $('#Age').css('border-color', 'Red');
+                isValid = false;
+            }
+            else
+            {
+                $('#Age').css('border-color', 'lightgrey');
+            }
+
+            if ($('#State').val().trim() == "")
+            {
+                $('#State').css('border-color', 'lightgrey');
+                isValid = false;
+            }
+            else
+            {
+                $('#State').css('border-color', 'lightgrey');
+            }
+
+            if ($('#Country').val().trim() == "") {
+                $('#Country').css('border-color', 'lightgrey');
+                isValid = false;
+            }
+            else
+            {
+                $('#Country').css('border-color', 'lightgrey');
+            }
+        };
+    </script>
+</body>
+</html>
